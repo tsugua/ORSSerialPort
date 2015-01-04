@@ -82,8 +82,10 @@
 {
 	NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 	if ([string length] == 0) return;
-	[self.receivedDataTextView.textStorage.mutableString appendString:string];
-	[self.receivedDataTextView setNeedsDisplay:YES];
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self.receivedDataTextView.textStorage.mutableString appendString:string];
+		[self.receivedDataTextView setNeedsDisplay:YES];
+	});
 }
 
 - (void)serialPortWasRemovedFromSystem:(ORSSerialPort *)serialPort;

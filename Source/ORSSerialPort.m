@@ -232,7 +232,7 @@ static __strong NSMutableArray *allSerialPorts;
 {
 	if (self.isOpen) return;
 	
-	dispatch_queue_t mainQueue = dispatch_get_main_queue();
+	dispatch_queue_t disQueue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
 	
 	int descriptor=0;
 	descriptor = open([self.path cStringUsingEncoding:NSASCIIStringEncoding], O_RDWR | O_NOCTTY | O_EXLOCK | O_NONBLOCK);
@@ -272,9 +272,9 @@ static __strong NSMutableArray *allSerialPorts;
 	self.RTS = desiredRTS;
 	self.DTR = desiredDTR;
 	
-	if ([(id)self.delegate respondsToSelector:@selector(serialPortWasOpened:)])
-	{
-		dispatch_async(mainQueue, ^{
+    if ([(id)self.delegate respondsToSelector:@selector(serialPortWasOpened:)])
+    {
+        dispatch_async(disQueue, ^{
 			[self.delegate serialPortWasOpened:self];
 		});
 	}
@@ -343,11 +343,11 @@ static __strong NSMutableArray *allSerialPorts;
 		BOOL DCDPin = (modemLines & TIOCM_CAR) != 0;
 		
 		if (CTSPin != self.CTS)
-			dispatch_sync(mainQueue, ^{self.CTS = CTSPin;});
+			dispatch_sync(disQueue, ^{self.CTS = CTSPin;});
 		if (DSRPin != self.DSR)
-			dispatch_sync(mainQueue, ^{self.DSR = DSRPin;});
+			dispatch_sync(disQueue, ^{self.DSR = DSRPin;});
 		if (DCDPin != self.DCD)
-			dispatch_sync(mainQueue, ^{self.DCD = DCDPin;});
+			dispatch_sync(disQueue, ^{self.DCD = DCDPin;});
 	});
 	self.pinPollTimer = timer;
 	dispatch_resume(self.pinPollTimer);
@@ -385,9 +385,9 @@ static __strong NSMutableArray *allSerialPorts;
 	
 	if ([(id)self.delegate respondsToSelector:@selector(serialPortWasClosed:)])
 	{
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[self.delegate serialPortWasClosed:self];
-		});
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            [self.delegate serialPortWasClosed:self];
+        });
 	}
 	return YES;
 }
@@ -535,9 +535,9 @@ static __strong NSMutableArray *allSerialPorts;
 {
 	if ([(id)self.delegate respondsToSelector:@selector(serialPort:didReceiveData:)])
 	{
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[self.delegate serialPort:self didReceiveData:data];
-		});
+        dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+            [self.delegate serialPort:self didReceiveData:data];
+        });
 	}
 	
 	dispatch_async(self.requestHandlingQueue, ^{
@@ -698,9 +698,9 @@ static __strong NSMutableArray *allSerialPorts;
 	if ([NSThread isMainThread]) {
 		notifyBlock();
 	} else if (shouldWait) {
-		dispatch_sync(dispatch_get_main_queue(), notifyBlock);
+		dispatch_sync(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), notifyBlock);
 	} else {
-		dispatch_async(dispatch_get_main_queue(), notifyBlock);
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), notifyBlock);
 	}
 }
 
