@@ -232,8 +232,9 @@ static __strong NSMutableArray *allSerialPorts;
 {
 	if (self.isOpen) return;
 	
-	dispatch_queue_t disQueue = dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0);
-	
+    dispatch_queue_attr_t attr = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_DEFAULT, 0);
+		dispatch_queue_t disQueue = dispatch_queue_create("com.openreelsoftware.ORSSerialPort", attr);
+		
 	int descriptor=0;
 	descriptor = open([self.path cStringUsingEncoding:NSASCIIStringEncoding], O_RDWR | O_NOCTTY | O_EXLOCK | O_NONBLOCK);
 	if (descriptor < 1)
